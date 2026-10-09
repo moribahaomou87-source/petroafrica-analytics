@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PETROAFRICA ANALYTICS</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">PETROLEUM QUALITY CONTROL</div>
+          <h1>PETROAFRICA ANALYTICS</h1>
+        </div>
+        <div class="lang-badges">
+          <span>FR</span>
+          <span>EN</span>
+          <span>RU</span>
+        </div>
+      </header>
+
+      <main class="grid">
+        <section class="panel form-panel">
+          <h2>Compliance check</h2>
+
+          <form id="complianceForm">
+            <div class="field-row">
+              <label>Product name</label>
+              <input name="product_name" value="Diesel fuel" required />
+            </div>
+
+            <div class="field-row">
+              <label>Sample code</label>
+              <input name="sample_code" value="D-001" required />
+            </div>
+
+            <div class="field-row">
+              <label>Parameter</label>
+              <input name="parameter" value="Density at 15°C" required />
+            </div>
+
+            <div class="field-row two-col">
+              <div>
+                <label>Measured value</label>
+                <input name="measured_value" type="number" value="832.4" step="0.1" required />
+              </div>
+              <div>
+                <label>Unit</label>
+                <input name="unit" value="kg/m3" required />
+              </div>
+            </div>
+
+            <div class="field-row two-col">
+              <div>
+                <label>Reference conditions</label>
+                <input name="reference_conditions" value="15°C" />
+              </div>
+              <div>
+                <label>Test method</label>
+                <input name="test_method" value="ASTM D4052" />
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label>Standard</label>
+              <input name="standard" value="EN 590" required />
+            </div>
+
+            <div class="field-row two-col">
+              <div>
+                <label>Edition</label>
+                <input name="edition" value="2022" required />
+              </div>
+              <div>
+                <label>Clause</label>
+                <input name="clause" value="Table 1" required />
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label>Source document</label>
+              <input name="source_document" value="European Committee for Standardization" required />
+            </div>
+
+            <div class="field-row two-col">
+              <div>
+                <label>Lower limit</label>
+                <input name="lower_limit" type="number" value="820" step="0.1" />
+              </div>
+              <div>
+                <label>Upper limit</label>
+                <input name="upper_limit" type="number" value="845" step="0.1" />
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label>Specification unit</label>
+              <input name="spec_unit" value="kg/m3" />
+            </div>
+
+            <div class="field-row">
+              <label>Reference conditions in spec</label>
+              <input name="spec_reference_conditions" value="15°C" />
+            </div>
+
+            <div class="field-row">
+              <label>Specification method</label>
+              <input name="spec_test_method" value="ASTM D4052 / ISO 12185" />
+            </div>
+
+            <button type="submit">Evaluate compliance</button>
+          </form>
+        </section>
+
+        <section class="panel result-panel">
+          <h2>Decision</h2>
+          <div id="resultCard" class="result-card neutral">
+            <div class="status-label">Status</div>
+            <div id="statusValue" class="status-value">Waiting</div>
+            <p id="reasonText">No evaluation performed yet.</p>
+          </div>
+
+          <div class="meta-block">
+            <h3>Reference metadata</h3>
+            <ul id="metaList">
+              <li>Standard: EN 590</li>
+              <li>Edition: 2022</li>
+              <li>Clause: Table 1</li>
+              <li>Source: European Committee for Standardization</li>
+            </ul>
+          </div>
+        </section>
+      </main>
+
+      <section class="panel demo-panel">
+        <h2>Demonstration data</h2>
+        <div class="demo-grid">
+          {% for spec in demo_specs %}
+          <article class="demo-card">
+            <div class="demo-name">{{ spec.parameter }}</div>
+            <div class="demo-metadata">
+              <span>{{ spec.standard }}</span>
+              <span>{{ spec.edition }}</span>
+              <span>{{ spec.clause }}</span>
+            </div>
+            <div class="demo-range">Range: {{ spec.lower_limit }} - {{ spec.upper_limit }} {{ spec.unit }}</div>
+          </article>
+          {% endfor %}
+        </div>
+      </section>
+    </div>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

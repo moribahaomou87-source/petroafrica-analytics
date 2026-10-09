@@ -1,0 +1,81 @@
+from __future__ import annotations
+
+from typing import Any
+
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+
+from petroafrica_analytics.compliance_engine import evaluate_compliance
+from petroafrica_analytics.demo_data import DEMO_RESULTS, DEMO_SPECIFICATIONS
+from petroafrica_analytics.schemas import ComplianceCheckRequest
+from petroafrica_analytics.storage import init_db, list_recent_results, save_result
+
+app = FastAPI(
+    title="PETROAFRICA ANALYTICS - Compliance Module",
+    description="Prototype for petroleum product conformity checking and quality compliance verification.",
+    version="0.1.0",
+)
+
+app.mount("/static", StaticFiles(directory="petroafrica_analytics/static"), name="static")
+templates = Jinja2Templates(directory="petroafrica_analytics/templates")
+
+
+@app.on_event("startup")
+def startup_event() -> None:
+    init_db()
+
+
+@app.get("/", response_class=HTMLResponse)
+async def home(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request,
+            "demo_specs": DEMO_SPECIFICATIONS,
+            "demo_results": DEMO_RESULTS,
+        },
+    )
+
+
+@app.get("/api/compliance/health")
+async def health_check() -> dict[str, str]:
+    return {"status": "ok", "module": "compliance"}
+
+
+@app.get("/api/compliance/history")
+async def history() -> list[dict[str, Any]]:
+    return list_recent_results(limit=15)
+
+
+@app.post("/api/compliance/check")
+async def compliance_check(payload: ComplianceCheckRequest) -> dict[str, Any]:
+    result = evaluate_compliance(payload)
+    save_result(result.model_dump())
+    return result.model_dump()
+
+
+@app.get("/api/demo")
+async def demo_payload() -> dict[str, Any]:
+    return {
+        "product_name": "Diesel fuel",
+        "sample_code": "D-001",
+        "parameter": "Density at 15°C",
+        "measured_value": 832.4,
+        "unit": "kg/m3",
+        "reference_conditions": "15°C",
+        "test_method": "ASTM D4052",
+        "specification": {
+            "standard": "EN 590",
+            "edition": "2022",
+            "clause": "Table 1",
+            "source_document": "European Committee for Standardization",
+            "lower_limit": 820.0,
+            "upper_limit": 845.0,
+            "unit": "kg/m3",
+            "reference_conditions": "15°C",
+            "test_method": "ASTM D4052 / ISO 12185",
+            "type": "product specification",
+        },
+    }

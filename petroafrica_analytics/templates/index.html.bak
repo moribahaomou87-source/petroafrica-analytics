@@ -1,0 +1,136 @@
+from petroafrica_analytics.compliance_engine import evaluate_compliance
+from petroafrica_analytics.schemas import ComplianceCheckRequest, SpecificationInput
+
+
+def test_conformant_result():
+    payload = ComplianceCheckRequest(
+        product_name="Diesel fuel",
+        sample_code="D-001",
+        parameter="Density at 15°C",
+        measured_value=832.4,
+        unit="kg/m3",
+        reference_conditions="15°C",
+        test_method="ASTM D4052",
+        specification=SpecificationInput(
+            standard="EN 590",
+            edition="2022",
+            clause="Table 1",
+            source_document="European Committee for Standardization",
+            lower_limit=820.0,
+            upper_limit=845.0,
+            unit="kg/m3",
+            reference_conditions="15°C",
+            test_method="ASTM D4052 / ISO 12185",
+            type="product specification",
+        ),
+    )
+
+    result = evaluate_compliance(payload)
+    assert result.status == "conforme"
+    assert result.reason == "Measured value is within the specification interval."
+
+
+def test_non_conformant_result():
+    payload = ComplianceCheckRequest(
+        product_name="Diesel fuel",
+        sample_code="D-002",
+        parameter="Density at 15°C",
+        measured_value=900.0,
+        unit="kg/m3",
+        reference_conditions="15°C",
+        test_method="ASTM D4052",
+        specification=SpecificationInput(
+            standard="EN 590",
+            edition="2022",
+            clause="Table 1",
+            source_document="European Committee for Standardization",
+            lower_limit=820.0,
+            upper_limit=845.0,
+            unit="kg/m3",
+            reference_conditions="15°C",
+            test_method="ASTM D4052 / ISO 12185",
+            type="product specification",
+        ),
+    )
+
+    result = evaluate_compliance(payload)
+    assert result.status == "non_conforme"
+    assert result.reason == "Measured value exceeds the upper specification limit."
+
+
+def test_missing_measurement_is_indeterminate():
+    payload = ComplianceCheckRequest(
+        product_name="Diesel fuel",
+        sample_code="D-003",
+        parameter="Density at 15°C",
+        measured_value=None,
+        unit="kg/m3",
+        reference_conditions="15°C",
+        test_method="ASTM D4052",
+        specification=SpecificationInput(
+            standard="EN 590",
+            edition="2022",
+            clause="Table 1",
+            source_document="European Committee for Standardization",
+            lower_limit=820.0,
+            upper_limit=845.0,
+            unit="kg/m3",
+            reference_conditions="15°C",
+            test_method="ASTM D4052 / ISO 12185",
+            type="product specification",
+        ),
+    )
+
+    result = evaluate_compliance(payload)
+    assert result.status == "indetermine"
+    assert "missing" in result.reason.lower()
+
+
+def test_unit_mismatch_is_indeterminate():
+    payload = ComplianceCheckRequest(
+        product_name="Diesel fuel",
+        sample_code="D-004",
+        parameter="Density at 15°C",
+        measured_value=832.4,
+        unit="g/cm3",
+        reference_conditions="15°C",
+        test_method="ASTM D4052",
+        specification=SpecificationInput(
+            standard="EN 590",
+            edition="2022",
+            clause="Table 1",
+            source_document="European Committee for Standardization",
+            lower_limit=820.0,
+            upper_limit=845.0,
+            unit="kg/m3",
+            reference_conditions="15°C",
+            test_method="ASTM D4052 / ISO 12185",
+            type="product specification",
+        ),
+    )
+
+    result = evaluate_compliance(payload)
+    assert result.status == "indetermine"
+    assert "unit" in result.reason.lower()
+
+
+def test_without_specification_is_indeterminate():
+    payload = ComplianceCheckRequest(
+        product_name="Diesel fuel",
+        sample_code="D-005",
+        parameter="Density at 15°C",
+        measured_value=832.4,
+        unit="kg/m3",
+        reference_conditions="15°C",
+        test_method="ASTM D4052",
+        specification=None,
+    )
+
+    result = evaluate_compliance(payload)
+    assert result.status == "indetermine"
+    assert "No applicable specification" in result.reason
+
+
+if __name__ == "__main__":
+    import pytest
+    pytest.main(["-q", __file__])
